@@ -1,2 +1,2 @@
 
-![alt text](https://github.com/sjkchang/CS157a-team9/blob/main/node_basic_setup.png?raw=true)
+![alt text](https://github.com/sjkchang/CS157a-team9/main/node_basic_setup.png?raw=true)
