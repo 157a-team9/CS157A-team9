@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>JDBC Connection example with NodeJS</title>
+    </head>
+    <body>
+        <h1>JDBC Connection example with NodeJS</h1>
+
+        <table border="1">
+            <tr>
+                <td>ID</td>
+                <td>Name</td>
+                <td>Age</td>
+            </tr>
+            <% for(var i=0; i < data.length; i++) { %>
+            <tr>
+                <td><%= data[i].SJSU_ID %></td>
+                <td><%= data[i].name %></td>
+                <td><%= data[i].major %></td>
+            </tr>
+            <% } %>
+        </table>
+    </body>
+</html>
