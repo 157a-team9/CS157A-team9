@@ -1,21 +1,12 @@
 //imports express
 const express = require("express");
 
-//imports a mysql connetor module
-var mysql = require("mysql");
+//import the db connection
+const connection = require("./database/connection.js");
 
 //Creates an express webapp
 const app = express();
 const port = 3000;
-
-//connects to mysql server
-var connection = mysql.createConnection({
-    host: "localhost",
-    user: "mysql_user",
-    password: "password",
-    database: "157a_team9",
-});
-connection.connect();
 
 //Sets up templeting the templating engine ejs, for html templates with variable inputs
 app.set("views", __dirname + "/views");
