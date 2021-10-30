@@ -1,6 +1,7 @@
 //imports express
 const express = require("express");
-
+const bcrypt = require("bcrypt");
+const saltRounds = 10;
 //import the db connection
 const connection = require("./database/connection.js");
 
@@ -12,19 +13,58 @@ const port = 3000;
 app.set("views", __dirname + "/views");
 app.set("view engine", "ejs");
 
-//Exposes a new route. req is the request object, res is the response object
-app.get("/", (req, res) => {
-    connection.query(
-        "SELECT * FROM 157a_team9.students;",
-        function (err, rows, fields) {
-            if (err) throw err;
-            console.log(rows);
-            //Sends the html template from the views directory to the client
-            return res.render("index", {
-                data: rows,
-            });
+//Setup Middleware
+app.use(express.json());
+app.use(express.urlencoded());
+/*app.use((req, res, next) => {
+    res.locals.user = req.session.user;
+    next();
+});*/
+
+//ROUTES
+
+app.get("/register", async (req, res) => {
+    return res.render("register");
+});
+
+app.post("/register", async (req, res) => {
+    try {
+        const password_hash = await bcrypt.hash(req.body.password, saltRounds);
+        const [rows, fields] = await connection.execute(
+            "INSERT INTO 157a_team9.user (email, username, password_hash) VALUES (?, ?, ?);",
+            [req.body.email, req.body.username, password_hash]
+        );
+        res.send(rows);
+    } catch (err) {
+        if (err.code == "ER_DUP_ENTRY") {
+            res.send("Username or email already taken");
         }
-    );
+        console.log(err);
+    }
+});
+
+app.get("/login", async (req, res) => {
+    return res.render("login");
+});
+
+app.post("/login", async (req, res) => {
+    try {
+        const [rows, fields] = await connection.execute(
+            "SELECT * FROM 157a_team9.user WHERE user.email LIKE ?;",
+            [req.body.email]
+        );
+        let valid = false;
+        if (rows[0]) {
+            let user = rows[0];
+            valid = await bcrypt.compare(req.body.password, user.password_hash);
+            if (valid) {
+                return res.send({ success: true, user: user });
+            }
+        }
+        return res.send({ success: false });
+    } catch (err) {
+        console.log(err);
+    }
 });
 
 //Starts up the express web server at port 3000
