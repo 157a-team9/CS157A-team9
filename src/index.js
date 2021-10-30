@@ -29,6 +29,18 @@ app.get("/register", async (req, res) => {
     return res.render("register");
 });
 
+
+app.get("/listing", async function (req, res) {
+    try {
+        const [rows, fields] = await connection.execute(
+            "SELECT * FROM 157a_team9.listing;"
+        );
+        res.render("listings", (listings = rows));
+    } catch (err) {
+        console.log(err);
+    }
+});
+
 app.post("/register", async (req, res) => {
     try {
         const password_hash = await bcrypt.hash(req.body.password, saltRounds);
