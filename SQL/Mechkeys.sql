@@ -8,17 +8,6 @@ CREATE TABLE `157a_team9`.`user` (
   UNIQUE INDEX `email_UNIQUE` (`email` ASC) VISIBLE,
   UNIQUE INDEX `username_UNIQUE` (`username` ASC) VISIBLE);
   
-  CREATE TABLE `157a_team9`.`seller` (
-  `user_id` INT NOT NULL,
-  `validated` TINYINT NOT NULL DEFAULT 0,
-  PRIMARY KEY (`user_id`),
-  UNIQUE INDEX `user_id_UNIQUE` (`user_id` ASC) VISIBLE,
-  CONSTRAINT `user_id`
-    FOREIGN KEY (`user_id`)
-    REFERENCES `157a_team9`.`user` (`user_id`)
-    ON DELETE CASCADE
-    ON UPDATE NO ACTION);
-  
   CREATE TABLE `157a_team9`.`address` (
   `address_id` INT NOT NULL AUTO_INCREMENT,
   `address` VARCHAR(45) NOT NULL,
@@ -111,9 +100,9 @@ CREATE TABLE `157a_team9`.`has_brand` (
     REFERENCES `157a_team9`.`listing` (`listing_id`)
     ON DELETE RESTRICT
     ON UPDATE CASCADE);
-
-INSERT INTO `157a_team9`.`user` (`user_id`, `email`, `username`, `password_hash`, `isVerified`) VALUES ('1', 'sjkchang@gmail.com', 'sjkchang', '$2b$10$5MmB65AVlOouAQw800hj9.KMCM0dfThwLKujH1vxeXRCE2vbyA6T.', '0');
-INSERT INTO `157a_team9`.`user` (`email`, `username`, `password_hash`, `isVerified`) VALUES ('testemail@gmail.com', 'testing', '$2b$10$5MmB65AVlOouAQw800hj9.KMCM0dfThwLKujH1vxeXRCE2vbyA6T.', '0');
+    
+INSERT INTO `157a_team9`.`user` (`email`, `username`, `password_hash`) VALUES ('sjkchang@gmail.com', 'sjkchang', '$2b$10$5MmB65AVlOouAQw800hj9.KMCM0dfThwLKujH1vxeXRCE2vbyA6T.');
+INSERT INTO `157a_team9`.`user` (`email`, `username`, `password_hash`) VALUES ('testemail@gmail.com', 'testing', '$2b$10$5MmB65AVlOouAQw800hj9.KMCM0dfThwLKujH1vxeXRCE2vbyA6T.');
 INSERT INTO `157a_team9`.`user` (`email`, `username`, `password_hash`) VALUES ('ssearek@gmail.com', 'ssearek', '$2b$10$5MmB65AVlOouAQw800hj9.KMCM0dfThwLKujH1vxeXRCE2vbyA6T.');
 INSERT INTO `157a_team9`.`user` (`email`, `username`, `password_hash`) VALUES ('tester@gmail.com', 'tester', '$2b$10$5MmB65AVlOouAQw800hj9.KMCM0dfThwLKujH1vxeXRCE2vbyA6T.');
 INSERT INTO `157a_team9`.`user` (`email`, `username`, `password_hash`) VALUES ('steven@yahoo.com', 'steven', '$2b$10$5MmB65AVlOouAQw800hj9.KMCM0dfThwLKujH1vxeXRCE2vbyA6T.');
@@ -272,3 +261,4 @@ INSERT INTO `157a_team9`.`has_category` (`category_id`, `listing_id`) VALUES ('6
 INSERT INTO `157a_team9`.`has_category` (`category_id`, `listing_id`) VALUES ('8', '7');
 INSERT INTO `157a_team9`.`has_category` (`category_id`, `listing_id`) VALUES ('8', '8');
 INSERT INTO `157a_team9`.`has_category` (`category_id`, `listing_id`) VALUES ('8', '9');
+
