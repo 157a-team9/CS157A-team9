@@ -5,20 +5,10 @@
     </head>
     <body>
         <h1>MYSQL Connection example with NodeJS test</h1>
-
-        <table border="1">
-            <tr>
-                <td>ID</td>
-                <td>Name</td>
-                <td>Age</td>
-            </tr>
-            <% for(var i=0; i < data.length; i++) { %>
-            <tr>
-                <td><%= data[i].SJSU_ID %></td>
-                <td><%= data[i].name %></td>
-                <td><%= data[i].major %></td>
-            </tr>
-            <% } %>
-        </table>
+        <% if (user) { %>
+        <p>Current user <%= user.username %></p>
+        <% } else { %>
+        <p>No current user</p>
+        <% } %>
     </body>
 </html>

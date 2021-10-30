@@ -1,6 +1,8 @@
 //imports express
 const express = require("express");
 const bcrypt = require("bcrypt");
+const cookieParser = require("cookie-parser");
+
 const saltRounds = 10;
 //import the db connection
 const connection = require("./database/connection.js");
@@ -16,12 +18,12 @@ app.set("view engine", "ejs");
 //Setup Middleware
 app.use(express.json());
 app.use(express.urlencoded());
-/*app.use((req, res, next) => {
-    res.locals.user = req.session.user;
-    next();
-});*/
+app.use(cookieParser());
 
 //ROUTES
+app.get("/", async (req, res) => {
+    res.render("index", (user = req.cookies.user));
+});
 
 app.get("/register", async (req, res) => {
     return res.render("register");
@@ -58,7 +60,15 @@ app.post("/login", async (req, res) => {
             let user = rows[0];
             valid = await bcrypt.compare(req.body.password, user.password_hash);
             if (valid) {
-                return res.send({ success: true, user: user });
+                res.cookie("user", user);
+                return res.send({
+                    success: true,
+                    user: {
+                        user_id: user.user_id,
+                        email: user.email,
+                        username: user.username,
+                    },
+                });
             }
         }
         return res.send({ success: false });
