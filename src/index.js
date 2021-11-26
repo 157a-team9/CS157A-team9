@@ -74,6 +74,42 @@ app.get("/listing", async function (req, res) {
     }
 });
 
+app.post("/save-listing/:listing_id", async function (req, res) {
+    try {
+        const [rows, fields] = await connection.execute(
+            "INSERT INTO 157a_team9.saves (user_id, listing_id) VALUES (?, ?);",
+            [req.cookies.user.user_id, req.params.listing_id]
+        );
+    } catch (err) {
+        console.log(err);
+    }
+    res.redirect("/listings/?page=mysaved&search=");
+});
+
+app.post("/unsave-listing/:listing_id", async function (req, res) {
+    try {
+        const [rows, fields] = await connection.execute(
+            "DELETE FROM 157a_team9.saves WHERE user_id = ? AND listing_id = ?;",
+            [req.cookies.user.user_id, req.params.listing_id]
+        );
+    } catch (err) {
+        console.log(err);
+    }
+    res.redirect("/listings/?page=mysaved&search=");
+});
+
+app.post("/delete-listing/:listing_id", async function (req, res) {
+    try {
+        const [rows, fields] = await connection.execute(
+            "DELETE FROM 157a_team9.listing WHERE listing_id = ?;",
+            [req.params.listing_id]
+        );
+    } catch (err) {
+        console.log(err);
+    }
+    res.redirect("/listings/?page=mylisting&search=");
+});
+
 app.post("/register", async (req, res) => {
     try {
         const password_hash = await bcrypt.hash(req.body.password, saltRounds);
