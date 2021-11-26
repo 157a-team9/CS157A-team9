@@ -28,7 +28,40 @@ app.get("/", async (req, res) => {
 app.get("/register", async (req, res) => {
     return res.render("register");
 });
+app.get("/register-seller", async (req, res) => {
+    return res.render("register-seller");
+});
 
+app.post("/register-seller", async (req, res) => {
+    const insertSellerQ =
+        "INSERT INTO 157a_team9.seller (user_id, phone, isValid) VALUES (?, ?, 1);";
+    const insertAddressQ =
+        "INSERT INTO 157a_team9.address (address, city, state, zipcode) VALUES (?, ?, ?, ?);";
+    const insertBelongsQ =
+        "INSERT INTO 157a_team9.belongs_to (user_id, address_id) VALUES (?, ?);";
+
+    try {
+        console.log(req.body);
+        let [rows, fields] = await connection.execute(insertSellerQ, [
+            req.cookies.user.user_id,
+            req.body.phone,
+        ]);
+        [rows, fields] = await connection.execute(insertAddressQ, [
+            req.body.address,
+            req.body.city,
+            req.body.state,
+            req.body.zipcode,
+        ]);
+        let address_id = rows.insertId;
+        [rows, fields] = await connection.execute(insertBelongsQ, [
+            req.cookies.user.user_id,
+            address_id,
+        ]);
+        res.redirect("/");
+    } catch (err) {
+        console.log(err);
+    }
+});
 
 app.get("/listing", async function (req, res) {
     try {
