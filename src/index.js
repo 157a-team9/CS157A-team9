@@ -20,6 +20,36 @@ app.use(express.json());
 app.use(express.urlencoded());
 app.use(cookieParser());
 
+//Custom Middleware
+async function checkState(req, res, next) {
+    try {
+        if (req.cookies.user) {
+            const [rows, fields] = await connection.execute(
+                "SELECT * FROM 157a_team9.seller WHERE user_id = ?;",
+                [req.cookies.user.user_id]
+            );
+            if (rows.length > 0) {
+                res.locals.state = "seller";
+            } else {
+                res.locals.state = "user";
+            }
+        }
+        next();
+    } catch (err) {
+        console.log(err);
+    }
+}
+
+app.use(checkState);
+
+function isLoggedIn(req, res, next) {
+    if (req.cookies.user) {
+        next();
+    } else {
+        res.send("You must be logged in to access this page");
+    }
+}
+
 //ROUTES
 app.get("/", async (req, res) => {
     res.render("index", (user = req.cookies.user));
@@ -63,12 +93,40 @@ app.post("/register-seller", async (req, res) => {
     }
 });
 
-app.get("/listing", async function (req, res) {
+app.get("/listings", async function (req, res) {
+    const baseQuery = `SELECT * FROM 157a_team9.listing 
+        WHERE title LIKE ? OR description LIKE ?;`;
+    const myListingsQuery = `SELECT * FROM 157a_team9.listing NATURAL JOIN 157a_team9.sold_by
+        WHERE user_id = ? AND (title LIKE ? OR description LIKE ?);`;
+    const savedListingsQuery = `SELECT * FROM 157a_team9.listing NATURAL JOIN saves 
+        WHERE user_id = ? AND (title LIKE ? OR description LIKE ?);`;
     try {
-        const [rows, fields] = await connection.execute(
-            "SELECT * FROM 157a_team9.listing;"
-        );
-        res.render("listings", (listings = rows));
+        let rows, fields;
+        let search = req.query.search;
+        let page = req.query.page;
+        search = "%" + search + "%";
+
+        if (page == "mysaved") {
+            res.locals.onSavedPage = true;
+            [rows, fields] = await connection.execute(savedListingsQuery, [
+                req.cookies.user.user_id,
+                search,
+                search,
+            ]);
+        } else if (page == "mylistings") {
+            res.locals.onMyPage = true;
+            [rows, fields] = await connection.execute(myListingsQuery, [
+                req.cookies.user.user_id,
+                search,
+                search,
+            ]);
+        } else {
+            [rows, fields] = await connection.execute(baseQuery, [
+                search,
+                search,
+            ]);
+        }
+        res.render("listings", { listings: rows });
     } catch (err) {
         console.log(err);
     }
@@ -156,6 +214,11 @@ app.post("/login", async (req, res) => {
     } catch (err) {
         console.log(err);
     }
+});
+
+app.get("/logout", async (req, res) => {
+    res.clearCookie("user");
+    res.redirect("/");
 });
 
 //Starts up the express web server at port 3000
