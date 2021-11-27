@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <%- include('./header'); %>
+    </head>
+    <body>
+        <% if(locals.update) {%>
+        <h1>Update Listing</h1>
+        <form id="listing-form" action="/update-listing/<%= listing.listing_id%>" method="post">
+            <div>
+                <label for="title">Title: </label>
+                <input type="text" id="title" name="title" value="<%= listing.title %>" required />
+            </div>
+            <div>
+                <label for="price">Price: </label>
+                <input type="text" id="price" name="price" value="<%= listing.price / 100 %>" required />
+            </div>
+            <div>
+                <label for="description">Description: </label>
+                <textarea
+                    name="description"
+                    id="description"
+                    rows="5"
+                    cols="30"
+                ><%= listing.description %></textarea>
+            </div>
+        <% } else { %>
+        <h1>Create Listing</h1>
+        <form id="listing-form" action="/create-listing" method="post">
+            <div>
+                <label for="title">Title: </label>
+                <input type="text" id="title" name="title" required />
+            </div>
+            <div>
+                <label for="price">Price: </label>
+                <input type="text" id="price" name="price" required />
+            </div>
+            <div>
+                <label for="description">Description: </label>
+                <textarea
+                    name="description"
+                    id="description"
+                    rows="5"
+                    cols="30"
+                ></textarea>
+            </div>
+        <% } %>
+            
+
+            <h3>Categories</h3>
+            <% if(locals.update) {%>
+                <% for(let i = 0; i<categories.length; i++) { %>
+                    <% if(selectedCategories.includes(categories[i].category_id)) { %>
+                        <input type="checkbox" id="category<%=  categories[i].category_id %>" name=categories[] value="<%=  categories[i].category_id %>" checked>
+                        <label for="category<%=  categories[i].category_id %>"> <%=  categories[i].category_name %></label><br>
+                    <% } else { %>
+                        <input type="checkbox" id="category<%=  categories[i].category_id %>" name=categories[] value="<%=  categories[i].category_id %>">
+                        <label for="category<%=  categories[i].category_id %>"> <%=  categories[i].category_name %></label><br>
+                    <% } %>
+                <% } %>
+    
+                <h3>Brand</h3>
+                <label for="brand">Brand:</label>
+                <select id="brand" name="brand">
+                    <% for(let i = 0; i<brands.length; i++) { %>
+                        <% if(listing.brand_id == brands[i].brand_id) { %>
+                        <option value="<%=  brands[i].brand_id %>" selected><%=  brands[i].brand_name %></option>
+                        <% } else { %>
+                        <option value="<%=  brands[i].brand_id %>"><%=  brands[i].brand_name %></option>
+                        <% } %>
+                    <% } %>
+                    
+                </select>
+                <br>
+                <br>
+                <input type="submit" value="Submit" />
+            <% } else { %>
+                <% for(let i = 0; i<categories.length; i++) { %>
+                    <input type="checkbox" id="category<%=  categories[i].category_id %>" name=categories[] value="<%=  categories[i].category_id %>">
+                    <label for="category<%=  categories[i].category_id %>"> <%=  categories[i].category_name %></label><br>
+                <% } %>
+    
+                <h3>Brand</h3>
+                <label for="brand">Brand:</label>
+                <select id="brand" name="brand">
+                    <% for(let i = 0; i<brands.length; i++) { %>
+                        <option value="<%=  brands[i].brand_id %>"><%=  brands[i].brand_name %></option>
+                    <% } %>
+                </select>
+                <br>
+                <br>
+                <input type="submit" value="Submit" />
+            <% } %>
+        </form>
+    </body>
+</html>

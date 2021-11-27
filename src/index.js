@@ -132,6 +132,64 @@ app.get("/listings", async function (req, res) {
     }
 });
 
+app.get("/create-listing", isLoggedIn, async (req, res) => {
+    try {
+        let [categories, fields] = await connection.execute(
+            "SELECT * FROM 157a_team9.category;"
+        );
+        let [brands, fields2] = await connection.execute(
+            "SELECT * FROM 157a_team9.brand;"
+        );
+        return res.render("createListing", {
+            categories: categories,
+            brands: brands,
+        });
+    } catch (err) {
+        console.log(err);
+    }
+});
+
+app.get("/update-listing/:listing_id", isLoggedIn, async (req, res) => {
+    try {
+        const [rows, fields] = await connection.execute(
+            `SELECT * 
+            FROM 157a_team9.listing NATURAL JOIN manf_by
+            NATURAL JOIN 157a_team9.brand
+            WHERE listing_id = ?;`,
+            [req.params.listing_id]
+        );
+        const [selected_categories, fields3] = await connection.execute(
+            `SELECT category_id, category_name 
+            FROM 157a_team9.category NATURAL JOIN has_category
+            WHERE listing_id = ?;`,
+            [req.params.listing_id]
+        );
+        let selectedCategories = [];
+        for (const key in selected_categories) {
+            selectedCategories.push(selected_categories[key].category_id);
+        }
+
+        res.locals.update = true;
+        let [categories, fields4] = await connection.execute(
+            "SELECT * FROM 157a_team9.category;"
+        );
+        let [brands, fields2] = await connection.execute(
+            "SELECT * FROM 157a_team9.brand;"
+        );
+        console.log(rows);
+
+        return res.render("createListing", {
+            categories: categories,
+            brands: brands,
+            update: true,
+            selectedCategories: selectedCategories,
+            listing: rows[0],
+        });
+    } catch (err) {
+        console.log(err);
+    }
+});
+
 app.post("/save-listing/:listing_id", async function (req, res) {
     try {
         const [rows, fields] = await connection.execute(
