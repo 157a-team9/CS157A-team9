@@ -216,6 +216,29 @@ app.post("/login", async (req, res) => {
     }
 });
 
+app.get("/listing/:listing_id", async function (req, res) {
+    try {
+        const [rows, fields] = await connection.execute(
+            `SELECT * 
+            FROM 157a_team9.listing NATURAL JOIN manf_by
+            NATURAL JOIN 157a_team9.brand NATURAL JOIN 157a_team9.sold_by
+            NATURAL JOIN 157a_team9.seller NATURAL JOIN 157a_team9.belongs_to NATURAL JOIN address
+            NATURAL JOIN 157a_team9.user
+            WHERE listing_id = ?;`,
+            [req.params.listing_id]
+        );
+        const [categories, fields2] = await connection.execute(
+            `SELECT category_id, category_name 
+            FROM 157a_team9.category NATURAL JOIN has_category
+            WHERE listing_id = ?;`,
+            [req.params.listing_id]
+        );
+        res.render("listing", { listing: rows[0], categories: categories });
+    } catch (err) {
+        console.log(err);
+    }
+});
+
 app.get("/logout", async (req, res) => {
     res.clearCookie("user");
     res.redirect("/");

@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <%- include('./header'); %>
+    </head>
+    <body>
+        <h1><%= listing.title %> $<%= listing.price / 100 %></h1>
+        <p><%= listing.description %></p>
+        <h2>Address</h2>
+        <p>Address: <%- listing.address %></p>
+        <p>City: <%- listing.city %></p>
+        <p>State: <%- listing.state %></p>
+        <p>Zipcode: <%- listing.zipcode %></p>
+        <h2>Categories</h2>
+        <% for(let i = 0; i<categories.length; i++) { %>
+            <p><%= categories[i].category_name %></p>
+        <% } %>
+        <h2>Brand</h2>
+        <p><%= listing.brand_name %></p>
+        <h2>Contact Info</h2>
+        <p>Phone: <%- listing.phone %></p>
+        <p>Email: <%- listing.email %></p>
+
+        <form
+            id="registrationForm"
+            action="/save-listing/<%=  listing.listing_id %>"
+            method="post"
+        >
+            <input type="submit" value="Save" />
+        </form>
+    </body>
+</html>
