@@ -190,6 +190,72 @@ app.get("/update-listing/:listing_id", isLoggedIn, async (req, res) => {
     }
 });
 
+app.post("/create-listing", async (req, res) => {
+    try {
+        let rows, fields;
+        [rows, fields] = await connection.execute(
+            "INSERT INTO 157a_team9.listing (title, description, price) VALUES (?, ?, ?);",
+            [req.body.title, req.body.description, req.body.price * 100]
+        );
+        let listing_id = rows.insertId;
+        await connection.execute(
+            "INSERT INTO 157a_team9.sold_by (user_id, listing_id) VALUES (?, ?);",
+            [req.cookies.user.user_id, listing_id]
+        );
+        await connection.execute(
+            "INSERT INTO 157a_team9.manf_by (brand_id, listing_id) VALUES (?, ?);",
+            [req.body.brand, listing_id]
+        );
+        for (let i = 0; i < req.body.categories.length; i++) {
+            await connection.execute(
+                "INSERT INTO 157a_team9.has_category (category_id, listing_id) VALUES (?, ?);",
+                [req.body.categories[i], listing_id]
+            );
+        }
+
+        res.redirect("/listings/?search=");
+    } catch (err) {
+        console.log(err);
+    }
+})
+
+app.post("/update-listing/:listing_id", async (req, res) => {
+    try {
+        // UPDATE LISTING TABLE
+        let rows, fields;
+        await connection.execute(
+            "UPDATE 157a_team9.listing SET title = ?, description = ?, price = ? WHERE listing_id = ?;",
+            [
+                req.body.title,
+                req.body.description,
+                req.body.price * 100,
+                req.params.listing_id,
+            ]
+        );
+
+        // UPDATE MANF_BY TABLE
+        await connection.execute(
+            "UPDATE 157a_team9.manf_by SET brand_id = ? WHERE listing_id = ?;",
+            [req.body.brand, req.params.listing_id]
+        );
+
+        // UPDATE CATEGORIES TABLE. This is done by deleting all has_category relations, and re-inserting the newly selected ones.
+        await connection.execute(
+            "DELETE FROM 157a_team9.has_category WHERE listing_id = ?;",
+            [req.params.listing_id]
+        );
+        for (let i = 0; i < req.body.categories.length; i++) {
+            await connection.execute(
+                "INSERT INTO 157a_team9.has_category (category_id, listing_id) VALUES (?, ?);",
+                [req.body.categories[i], req.params.listing_id]
+            );
+        }
+        res.redirect("/listings/?search=");
+    } catch (err) {
+        console.log(err);
+    }
+});
+
 app.post("/save-listing/:listing_id", async function (req, res) {
     try {
         const [rows, fields] = await connection.execute(
