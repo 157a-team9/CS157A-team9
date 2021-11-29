@@ -52,46 +52,11 @@ function isLoggedIn(req, res, next) {
 
 //ROUTES
 app.get("/", async (req, res) => {
-    res.render("index", (user = req.cookies.user));
+    res.render("index", { user: req.cookies.user });
 });
 
-app.get("/register", async (req, res) => {
-    return res.render("register");
-});
-app.get("/register-seller", async (req, res) => {
-    return res.render("register-seller");
-});
-
-app.post("/register-seller", async (req, res) => {
-    const insertSellerQ =
-        "INSERT INTO 157a_team9.seller (user_id, phone, isValid) VALUES (?, ?, 1);";
-    const insertAddressQ =
-        "INSERT INTO 157a_team9.address (address, city, state, zipcode) VALUES (?, ?, ?, ?);";
-    const insertBelongsQ =
-        "INSERT INTO 157a_team9.belongs_to (user_id, address_id) VALUES (?, ?);";
-
-    try {
-        console.log(req.body);
-        let [rows, fields] = await connection.execute(insertSellerQ, [
-            req.cookies.user.user_id,
-            req.body.phone,
-        ]);
-        [rows, fields] = await connection.execute(insertAddressQ, [
-            req.body.address,
-            req.body.city,
-            req.body.state,
-            req.body.zipcode,
-        ]);
-        let address_id = rows.insertId;
-        [rows, fields] = await connection.execute(insertBelongsQ, [
-            req.cookies.user.user_id,
-            address_id,
-        ]);
-        res.redirect("/");
-    } catch (err) {
-        console.log(err);
-    }
-});
+//LISTING ROUTES -----------------------------------------------------------
+//LISTING GET ROUTES
 
 app.get("/listings", async function (req, res) {
     const baseQuery = `SELECT * FROM 157a_team9.listing 
@@ -127,6 +92,29 @@ app.get("/listings", async function (req, res) {
             ]);
         }
         res.render("listings", { listings: rows });
+    } catch (err) {
+        console.log(err);
+    }
+});
+
+app.get("/listing/:listing_id", async function (req, res) {
+    try {
+        const [rows, fields] = await connection.execute(
+            `SELECT * 
+            FROM 157a_team9.listing NATURAL JOIN manf_by
+            NATURAL JOIN 157a_team9.brand NATURAL JOIN 157a_team9.sold_by
+            NATURAL JOIN 157a_team9.seller NATURAL JOIN 157a_team9.belongs_to NATURAL JOIN address
+            NATURAL JOIN 157a_team9.user
+            WHERE listing_id = ?;`,
+            [req.params.listing_id]
+        );
+        const [categories, fields2] = await connection.execute(
+            `SELECT category_id, category_name 
+            FROM 157a_team9.category NATURAL JOIN has_category
+            WHERE listing_id = ?;`,
+            [req.params.listing_id]
+        );
+        res.render("listing", { listing: rows[0], categories: categories });
     } catch (err) {
         console.log(err);
     }
@@ -190,6 +178,8 @@ app.get("/update-listing/:listing_id", isLoggedIn, async (req, res) => {
     }
 });
 
+// LISTING POST ROUTES
+
 app.post("/create-listing", async (req, res) => {
     try {
         let rows, fields;
@@ -217,7 +207,7 @@ app.post("/create-listing", async (req, res) => {
     } catch (err) {
         console.log(err);
     }
-})
+});
 
 app.post("/update-listing/:listing_id", async (req, res) => {
     try {
@@ -292,6 +282,12 @@ app.post("/delete-listing/:listing_id", async function (req, res) {
     res.redirect("/listings/?page=mylisting&search=");
 });
 
+//REGISTRATION ROUTES -------------------------------------------------------------
+
+app.get("/register", async (req, res) => {
+    return res.render("register");
+});
+
 app.post("/register", async (req, res) => {
     try {
         const password_hash = await bcrypt.hash(req.body.password, saltRounds);
@@ -299,7 +295,8 @@ app.post("/register", async (req, res) => {
             "INSERT INTO 157a_team9.user (email, username, password_hash) VALUES (?, ?, ?);",
             [req.body.email, req.body.username, password_hash]
         );
-        res.send(rows);
+        //res.send(rows);
+        res.redirect("/login");
     } catch (err) {
         if (err.code == "ER_DUP_ENTRY") {
             res.send("Username or email already taken");
@@ -307,6 +304,43 @@ app.post("/register", async (req, res) => {
         console.log(err);
     }
 });
+
+app.get("/register-seller", async (req, res) => {
+    return res.render("register-seller");
+});
+
+app.post("/register-seller", async (req, res) => {
+    const insertSellerQ =
+        "INSERT INTO 157a_team9.seller (user_id, phone, isValid) VALUES (?, ?, 1);";
+    const insertAddressQ =
+        "INSERT INTO 157a_team9.address (address, city, state, zipcode) VALUES (?, ?, ?, ?);";
+    const insertBelongsQ =
+        "INSERT INTO 157a_team9.belongs_to (user_id, address_id) VALUES (?, ?);";
+
+    try {
+        console.log(req.body);
+        let [rows, fields] = await connection.execute(insertSellerQ, [
+            req.cookies.user.user_id,
+            req.body.phone,
+        ]);
+        [rows, fields] = await connection.execute(insertAddressQ, [
+            req.body.address,
+            req.body.city,
+            req.body.state,
+            req.body.zipcode,
+        ]);
+        let address_id = rows.insertId;
+        [rows, fields] = await connection.execute(insertBelongsQ, [
+            req.cookies.user.user_id,
+            address_id,
+        ]);
+        res.redirect("/");
+    } catch (err) {
+        console.log(err);
+    }
+});
+
+//LOGIN & LOGOUT ROUTES ----------------------------------------------------------
 
 app.get("/login", async (req, res) => {
     return res.render("login");
@@ -324,40 +358,11 @@ app.post("/login", async (req, res) => {
             valid = await bcrypt.compare(req.body.password, user.password_hash);
             if (valid) {
                 res.cookie("user", user);
-                return res.send({
-                    success: true,
-                    user: {
-                        user_id: user.user_id,
-                        email: user.email,
-                        username: user.username,
-                    },
-                });
+                res.locals.state == "user";
+                return res.redirect("/");
             }
         }
         return res.send({ success: false });
-    } catch (err) {
-        console.log(err);
-    }
-});
-
-app.get("/listing/:listing_id", async function (req, res) {
-    try {
-        const [rows, fields] = await connection.execute(
-            `SELECT * 
-            FROM 157a_team9.listing NATURAL JOIN manf_by
-            NATURAL JOIN 157a_team9.brand NATURAL JOIN 157a_team9.sold_by
-            NATURAL JOIN 157a_team9.seller NATURAL JOIN 157a_team9.belongs_to NATURAL JOIN address
-            NATURAL JOIN 157a_team9.user
-            WHERE listing_id = ?;`,
-            [req.params.listing_id]
-        );
-        const [categories, fields2] = await connection.execute(
-            `SELECT category_id, category_name 
-            FROM 157a_team9.category NATURAL JOIN has_category
-            WHERE listing_id = ?;`,
-            [req.params.listing_id]
-        );
-        res.render("listing", { listing: rows[0], categories: categories });
     } catch (err) {
         console.log(err);
     }
