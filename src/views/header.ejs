@@ -23,24 +23,24 @@
             <div class="ui inverted menu">
                 <% if(!locals.state) { %>
                 <a class="item" href="/"> Home </a>
-                <a class="item" href="/listings/?search="> Listings </a>
+                <a class="item" href="/listings/"> Listings </a>
                 <a class="item" href="/register"> Register </a>
                 <a class="item" href="/login"> Login </a>
                 <% } else if(state=="seller"){ %>
                 <a class="item" href="/"> Home </a>
-                <a class="item" href="/listings/?search="> Listings </a>
+                <a class="item" href="/listings/"> Listings </a>
                 <a class="item" href="/create-listing"> Create Listing </a>
-                <a class="item" href="/listings/?page=mysaved&search=">
+                <a class="item" href="/listings/?page=mysaved">
                     Saved Listings
                 </a>
-                <a class="item" href="/listings/?page=mylistings&search=">
+                <a class="item" href="/listings/?page=mylistings">
                     My Listings
                 </a>
                 <a class="item" href="/logout"> Logout </a>
                 <% } else if(state=="user") { %>
                 <a class="item" href="/"> Home </a>
-                <a class="item" href="/listings/?search="> Listings </a>
-                <a class="item" href="/listings/?page=mysaved&search=">
+                <a class="item" href="/listings/"> Listings </a>
+                <a class="item" href="/listings/?page=mysaved">
                     Saved Listings
                 </a>
                 <a class="item" href="/register-seller">

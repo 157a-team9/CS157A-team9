@@ -59,17 +59,50 @@ app.get("/", async (req, res) => {
 //LISTING GET ROUTES
 
 app.get("/listings", async function (req, res) {
-    const baseQuery = `SELECT * FROM 157a_team9.listing 
-        WHERE title LIKE ? OR description LIKE ?;`;
-    const myListingsQuery = `SELECT * FROM 157a_team9.listing NATURAL JOIN 157a_team9.sold_by
-        WHERE user_id = ? AND (title LIKE ? OR description LIKE ?);`;
-    const savedListingsQuery = `SELECT * FROM 157a_team9.listing NATURAL JOIN saves 
-        WHERE user_id = ? AND (title LIKE ? OR description LIKE ?);`;
+    const baseQuery = `SELECT * FROM 157a_team9.listing NATURAL JOIN manf_by
+        WHERE (title LIKE ? OR description LIKE ?)
+        AND brand_id LIKE ?
+        AND listing_id IN 
+            (SELECT listing_id FROM has_category WHERE category_id LIKE ?);`;
+
+    const myListingsQuery = `SELECT * FROM 157a_team9.listing NATURAL JOIN 157a_team9.sold_by NATURAL JOIN manf_by
+        WHERE user_id = ? 
+        AND (title LIKE ? OR description LIKE ?) 
+        AND brand_id LIKE ?
+        AND listing_id IN 
+            (SELECT listing_id FROM has_category WHERE category_id LIKE ?);`;
+
+    const savedListingsQuery = `SELECT * FROM 157a_team9.listing NATURAL JOIN saves NATURAL JOIN manf_by
+        WHERE user_id = ? 
+        AND (title LIKE ? OR description LIKE ?) 
+        AND brand_id LIKE ?
+        AND listing_id IN 
+            (SELECT listing_id FROM has_category WHERE category_id LIKE ?);`;
+
     try {
         let rows, fields;
         let search = req.query.search;
+        if (search) {
+            search = "%" + search + "%";
+        } else {
+            search = "%%";
+        }
+
+        let category_filter = req.query.category_id;
+        if (category_filter && category_filter != -1) {
+            category_filter = "%" + category_filter + "%";
+        } else {
+            category_filter = "%%";
+        }
+
+        let brand_filter = req.query.brand_id;
+        if (brand_filter && brand_filter != -1) {
+            brand_filter = "%" + brand_filter + "%";
+        } else {
+            brand_filter = "%%";
+        }
+
         let page = req.query.page;
-        search = "%" + search + "%";
 
         if (page == "mysaved") {
             res.locals.onSavedPage = true;
@@ -77,6 +110,8 @@ app.get("/listings", async function (req, res) {
                 req.cookies.user.user_id,
                 search,
                 search,
+                brand_filter,
+                category_filter,
             ]);
         } else if (page == "mylistings") {
             res.locals.onMyPage = true;
@@ -84,14 +119,30 @@ app.get("/listings", async function (req, res) {
                 req.cookies.user.user_id,
                 search,
                 search,
+                brand_filter,
+                category_filter,
             ]);
         } else {
             [rows, fields] = await connection.execute(baseQuery, [
                 search,
                 search,
+                brand_filter,
+                category_filter,
             ]);
         }
-        res.render("listings", { listings: rows });
+
+        let [categories, fields3] = await connection.execute(
+            "SELECT * FROM 157a_team9.category;"
+        );
+        let [brands, fields2] = await connection.execute(
+            "SELECT * FROM 157a_team9.brand;"
+        );
+
+        res.render("listings", {
+            listings: rows,
+            categories: categories,
+            brands: brands,
+        });
     } catch (err) {
         console.log(err);
     }
@@ -114,6 +165,7 @@ app.get("/listing/:listing_id", async function (req, res) {
             WHERE listing_id = ?;`,
             [req.params.listing_id]
         );
+        console.log(rows);
         res.render("listing", { listing: rows[0], categories: categories });
     } catch (err) {
         console.log(err);
@@ -203,7 +255,7 @@ app.post("/create-listing", async (req, res) => {
             );
         }
 
-        res.redirect("/listings/?search=");
+        res.redirect("/listings/");
     } catch (err) {
         console.log(err);
     }
@@ -240,7 +292,7 @@ app.post("/update-listing/:listing_id", async (req, res) => {
                 [req.body.categories[i], req.params.listing_id]
             );
         }
-        res.redirect("/listings/?search=");
+        res.redirect("/listings/");
     } catch (err) {
         console.log(err);
     }
@@ -255,7 +307,7 @@ app.post("/save-listing/:listing_id", async function (req, res) {
     } catch (err) {
         console.log(err);
     }
-    res.redirect("/listings/?page=mysaved&search=");
+    res.redirect("/listings/?page=mysaved");
 });
 
 app.post("/unsave-listing/:listing_id", async function (req, res) {
@@ -267,7 +319,7 @@ app.post("/unsave-listing/:listing_id", async function (req, res) {
     } catch (err) {
         console.log(err);
     }
-    res.redirect("/listings/?page=mysaved&search=");
+    res.redirect("/listings/?page=mysaved");
 });
 
 app.post("/delete-listing/:listing_id", async function (req, res) {
@@ -279,7 +331,7 @@ app.post("/delete-listing/:listing_id", async function (req, res) {
     } catch (err) {
         console.log(err);
     }
-    res.redirect("/listings/?page=mylisting&search=");
+    res.redirect("/listings/?page=mylisting");
 });
 
 //REGISTRATION ROUTES -------------------------------------------------------------
