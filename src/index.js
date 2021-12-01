@@ -83,21 +83,21 @@ app.get("/listings", async function (req, res) {
         let rows, fields;
         let search = req.query.search;
         if (search) {
-            search = "%" + search + "%";
+            search = search;
         } else {
             search = "%%";
         }
 
         let category_filter = req.query.category_id;
         if (category_filter && category_filter != -1) {
-            category_filter = "%" + category_filter + "%";
+            category_filter = category_filter;
         } else {
             category_filter = "%%";
         }
 
         let brand_filter = req.query.brand_id;
         if (brand_filter && brand_filter != -1) {
-            brand_filter = "%" + brand_filter + "%";
+            brand_filter = brand_filter;
         } else {
             brand_filter = "%%";
         }
@@ -165,7 +165,6 @@ app.get("/listing/:listing_id", async function (req, res) {
             WHERE listing_id = ?;`,
             [req.params.listing_id]
         );
-        console.log(rows);
         res.render("listing", { listing: rows[0], categories: categories });
     } catch (err) {
         console.log(err);
@@ -216,7 +215,6 @@ app.get("/update-listing/:listing_id", isLoggedIn, async (req, res) => {
         let [brands, fields2] = await connection.execute(
             "SELECT * FROM 157a_team9.brand;"
         );
-        console.log(rows);
 
         return res.render("createListing", {
             categories: categories,
@@ -370,7 +368,6 @@ app.post("/register-seller", async (req, res) => {
         "INSERT INTO 157a_team9.belongs_to (user_id, address_id) VALUES (?, ?);";
 
     try {
-        console.log(req.body);
         let [rows, fields] = await connection.execute(insertSellerQ, [
             req.cookies.user.user_id,
             req.body.phone,
