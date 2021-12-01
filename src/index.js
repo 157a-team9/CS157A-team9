@@ -83,7 +83,7 @@ app.get("/listings", async function (req, res) {
         let rows, fields;
         let search = req.query.search;
         if (search) {
-            search = search;
+            search = "%" + search + "%";
         } else {
             search = "%%";
         }
